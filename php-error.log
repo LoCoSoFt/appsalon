@@ -1,0 +1,6 @@
+[16-Feb-2025 05:50:02 America/Lima] database::conectarDB()->No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+[16-Feb-2025 05:50:06 America/Lima] database::conectarDB()->No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+[16-Feb-2025 06:34:58 America/Lima] PHP Warning:  strtok(): Both arguments must be provided when starting tokenization in C:\htdocs\miscursos\desarrollo-web-completo\AppSalon_PHP_MVC_JS_SASS\AppSalon_PHP_MVC_JS_SASS\Router.php on line 51
+[16-Feb-2025 06:34:58 America/Lima] PHP Warning:  strtok(): Both arguments must be provided when starting tokenization in C:\htdocs\miscursos\desarrollo-web-completo\AppSalon_PHP_MVC_JS_SASS\AppSalon_PHP_MVC_JS_SASS\Router.php on line 51
+[16-Feb-2025 06:35:45 America/Lima] iniciando sesion en login
+[16-Feb-2025 06:35:45 America/Lima] LoginController::login-> login exitoso
