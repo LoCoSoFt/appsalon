@@ -24,10 +24,21 @@ class ActiveRecord {
 
     }
 
+    /**
+     * Establece la variable estatica DB en las clases hijos
+     *
+     * @param [type] $database la conexión actual a la BD
+     * @return void
+     */
     public static function setDB($database){
         self::$db = $database;
     }
 
+    /**
+     * Define que método debe ejecutar: crear o actualizar, para eso evalúa la existencia de un ID
+     *
+     * @return [] el resultado de las funciones actualizar y crear
+     */
     public function guardar() {
         if(isset($this->id) && $this->id != '') {
             //actualizando           
@@ -38,13 +49,19 @@ class ActiveRecord {
         }
     }
 
+    /**
+     * Actualiza un registro en la BD. Extrae el nombre de todos los campos(atributos) y forma una cadena
+     * que se usará luego para preparar el Query
+     *
+     * @return void
+     */
     public function actualizar() {
         
         $atributos = $this->sanitizarAtributos();
 
         $cadena = '';
 
-        foreach ($atributos as $key => $value) {
+        foreach ($atributos as $key) {
             if($cadena === '') {
                 $cadena .= "$key = ?";
                 continue;
@@ -56,20 +73,24 @@ class ActiveRecord {
         //param s para el id y el valor id extraido del objeto actual
         $params .= 's';
         $atributos['id'] = $this->id;        
-        
         $query = "UPDATE " . static::$tabla . " SET $cadena WHERE id = ? LIMIT 1";
-
+        
         $datos = array_values($atributos); 
-
-        $statement = self::$db->prepare($query);
-        $statement->bind_param($params, ...$datos);
-        $statement->execute();
-
-        error_log(static::class . '::Actualizar->rows updated ' . $statement->affected_rows);
-        if ($statement->affected_rows > 0){
-            return ['resultado' => true];
+        try {
+            
+            $statement = self::$db->prepare($query);
+            $statement->bind_param($params, ...$datos);
+            $statement->execute();
+    
+            error_log(static::class . '::Actualizar->rows updated ' . $statement->affected_rows);
+            if ($statement->affected_rows > 0){
+                return ['resultado' => true];
+            }
+            return ['resultado' => false];
+        } catch (Exception $e) {
+            return ['resultado' => false];
+            error_log(static::class . '::Actualizar->rows error al actualizar ' . $e->getMessage());
         }
-        return ['resultado' => false];
     }   
 
     /**
@@ -143,7 +164,7 @@ class ActiveRecord {
     }
 
     /**
-     * Identifica y une los atributos de la BD
+     * Crea un array llamado atributos con los datos y valores(excepto ID) de las $columnasDB de la clase
      *
      * @return atributos retorna el arreglo de atributos mapeado con la BD
      */
@@ -201,6 +222,11 @@ class ActiveRecord {
         return static::$alertas;
     }
 
+    /**
+     * Obtiene todos los registros de la la tabla
+     *
+     * @return array con el resultado de la búsqueda
+     */
     public static function all() : array{
         $query = "SELECT * FROM " . static::$tabla;
 
@@ -209,6 +235,12 @@ class ActiveRecord {
         return $resultado;
     }
 
+    /**
+     * Busca un registro específico en la tabla
+     *
+     * @param [type] $id El identificador del registro que se busca
+     * @return array El primer registro que encuentre. SOlo devolverá uno
+     */
     public static function find($id) {
         $query = "SELECT * FROM " . static::$tabla .  " WHERE id = $id";
         $resultado = self::consultarSQL($query);
@@ -217,6 +249,13 @@ class ActiveRecord {
         return array_shift($resultado);
     }
 
+    /**
+     * Retorna UN registro resultado de una búsqueda en la tabla
+     *
+     * @param [type] $columna a la cual se quiere consultar
+     * @param [type] $valor el cuál se desea encontrar
+     * @return array con el primer registro encontrado
+     */
     public static function where($columna, $valor) {
         $query = "SELECT * FROM " . static::$tabla .  " WHERE " . $columna . " = " . $valor . " LIMIT 1";
 
@@ -228,8 +267,8 @@ class ActiveRecord {
     /**
      * Consulta plana de SQL: Usalo cuando los métodos del modelo no son suficiente
      *
-     * @param string $query
-     * @return array
+     * @param string $query Consulta SQL
+     * @return array con el resultado encontrado
      */
     public static function SQL(string $query) : array {
         $resultado = self::consultarSQL($query);
@@ -237,7 +276,12 @@ class ActiveRecord {
         return $resultado;
     }
 
-
+    /**
+     * Ejectuta una consulta SQL de Selección y crea un objeto por cada registro retornado en la consulta
+     *
+     * @param [type] $query Consulta SQL
+     * @return array Colección de objeto creados
+     */
     public static function consultarSQL($query) : array {
         //consultar BD
         $resultado = self::$db->query($query);
@@ -268,6 +312,12 @@ class ActiveRecord {
         return $resultado;
     }
 
+    /**
+     * Crea un objeto nuevo con los valores de un array resultado de una consulta
+     *
+     * @param [type] $registro EL registro de una tabla
+     * @return object El nuevo objeto 
+     */
     protected static function crearObjeto($registro) {
         $objeto = new static;
 
@@ -280,7 +330,12 @@ class ActiveRecord {
         return $objeto;
     }
 
-    //sincroniza el objeto con los datos actualizados por el usuario
+    /**
+     * Sincroniza el objeto con nuevos datos
+     *
+     * @param array $arg Los nuevos datos
+     * @return void
+     */
     public function sincronizar($arg) {
 
         foreach($arg as $key=>$value){
